@@ -1,56 +1,54 @@
 package org.funtimecoding.java.mysql.example;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import javax.swing.JOptionPane;
 
 public class ExampleMain {
-    public static void main(String[] args) {
-        ExampleMain main = new ExampleMain();
+	static String HOST = "localhost";
+	static String PORT = "3306";
+	static String USER = "root";
+	static String PASS = "univel";
+	// static String PASS = "univel";
+	static String DATA_BASE = "example_java_mysql";
 
-        try {
-            main.run();
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
-    }
+	public static void main(String[] args) {
+		ExampleMain main = new ExampleMain();
 
-    private void run() throws SQLException, ClassNotFoundException {
-        Class.forName("com.mysql.jdbc.Driver");
-        Connection connection = DriverManager.getConnection("jdbc:mysql://localhost/example?user=example&password=example&zeroDateTimeBehavior=convertToNull");
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery("SELECT * FROM example.user");
-        System.out.println("Printing schema for table: " + resultSet.getMetaData().getTableName(1));
-        int columnCount = resultSet.getMetaData().getColumnCount();
+		try {
+			main.run();
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+		}
+	}
 
-        for (int i = 1; i <= columnCount; i++) {
-            System.out.println(i + " " + resultSet.getMetaData().getColumnName(i));
-        }
+	private void run() throws SQLException, ClassNotFoundException {
+		try {
+			// Class.forName("com.mysql.jdbc.Driver");
+			String connectionURL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DATA_BASE
+					+ "?autoReconnect=true&useSSL=false";
 
-        System.out.println("Searching for example user.");
-        boolean exampleUserFound = false;
+			Connection connection = DriverManager.getConnection(connectionURL, USER, PASS);
 
-        while (resultSet.next()) {
-            String username = resultSet.getString("name");
+			Statement statement = connection.createStatement();
+			ResultSet resultSet = statement.executeQuery("SELECT * FROM aluno");
 
-            if (username.equals("shiin")) {
-                Timestamp createdAt = resultSet.getTimestamp("created_at");
-                Timestamp updatedAt = resultSet.getTimestamp("updated_at");
-                System.out.println("Example user found.");
-                System.out.println("Name: " + username);
-                System.out.println("Created at: " + createdAt);
-                System.out.println("Updated at: " + updatedAt);
-                exampleUserFound = true;
+			StringBuilder sb = new StringBuilder();
+			while (resultSet.next()) {
+				String codigo = resultSet.getString("codigo");
+				String nome = resultSet.getString("nome");
+				String ra = resultSet.getString("ra");
 
-                break;
-            }
-        }
+				sb.append(codigo).append(" | ").append(nome).append(" | ").append(ra).append("\n");
+			}
 
-        if (!exampleUserFound) {
-            System.out.println("Example user not found. Inserting a new user.");
-            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO example.user (name, password, created_at) VALUES (?, ?, ?)");
-            preparedStatement.setString(1, "shiin");
-            preparedStatement.setString(2, "insecure");
-            preparedStatement.setTimestamp(3, new Timestamp(new java.util.Date().getTime()));
-            preparedStatement.executeUpdate();
-        }
-    }
+			JOptionPane.showMessageDialog(null, sb.toString());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }
